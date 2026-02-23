@@ -2,6 +2,6 @@ streamlit
 openai
 pandas
 regex
-pdfkit
-supabase
 requests
+supabase
+fpdf
