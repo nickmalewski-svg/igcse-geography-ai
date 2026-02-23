@@ -38,17 +38,35 @@ def login_signup():
     option = st.radio("Choose an option:", ["Login", "Signup"])
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
+    
     if st.button("Submit"):
         if option == "Signup":
-            res = supabase.auth.sign_up({"email": email, "password": password})
-            if res.user: st.success("Signup successful! You can now login.")
-            else: st.error("Signup failed.")
+            # Signup
+            try:
+                res = supabase.auth.sign_up({
+                    "email": email,
+                    "password": password
+                })
+                if res.user:
+                    st.success("Signup successful! You can now login.")
+                else:
+                    st.error("Signup failed. Check your email or password.")
+            except Exception as e:
+                st.error(f"Signup error: {e}")
         else:
-            res = supabase.auth.sign_in({"email": email, "password": password})
-            if res.user: 
-                st.session_state["user"] = res.user
-                st.success(f"Logged in as {email}")
-            else: st.error("Login failed")
+            # Login
+            try:
+                res = supabase.auth.sign_in_with_password({
+                    "email": email,
+                    "password": password
+                })
+                if res.user:
+                    st.session_state["user"] = res.user
+                    st.success(f"Logged in as {email}")
+                else:
+                    st.error("Login failed. Check your email or password.")
+            except Exception as e:
+                st.error(f"Login error: {e}")
     st.stop()
 
 if st.session_state["user"] is None:
