@@ -1,26 +1,17 @@
-# Streamlit and UI
 streamlit==1.27.0
+rich>=10.14.0,<14
 altair==5.5.0
 blinker==1.9.0
 cachetools==5.5.2
 click==8.3.1
 importlib-metadata==6.11.0
 numpy==1.25.2
-packaging==23.2
-pillow==9.4.0   # safe version for Python 3.12
-rich==14.3.3
-markdown-it-py==4.0.0
-mdurl==0.1.2
-pygments==2.19.2
-
-# Data handling
 pandas==2.3.3
-regex==2026.2.19
-
-# PDF generation
+pillow==9.4.0
 fpdf==1.7.2
-
-# Networking & APIs
 requests==2.32.5
 openai==2.22.0
 supabase==2.28.0
+markdown-it-py==4.0.0
+mdurl==0.1.2
+pygments==2.19.2
