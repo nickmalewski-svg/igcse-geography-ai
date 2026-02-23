@@ -131,23 +131,35 @@ if page == "📝 Take Exam":
     mastery = calculate_mastery(past_results, topics)
     topic_q = questions_per_topic(mastery)
 
-    # Generate exam
-    if st.button("Generate Exam"):
-        with st.spinner("Generating exam..."):
-            exam_prompt = "Generate a personalized IGCSE Geography exam with MCQs, short answers, essays, and map/image questions:\n"
-            for topic,q in topic_q.items():
-                exam_prompt += f"- {topic}: {q['MCQ']} MCQs, {q['SA']} SA, {q['Essay']} essays, {q['Map']} map/image question.\n"
-            exam_prompt += "Provide model answers, rubric for essays, and image URLs."
+   # Select model safely
+MODEL_TO_USE = "gpt-3.5-turbo"  # default safe choice
+# MODEL_TO_USE = "gpt-4"  # uncomment if your API key has GPT-4 access
 
-            # ✅ Updated OpenAI API v1 call
+# Generate exam
+if st.button("Generate Exam"):
+    with st.spinner("Generating exam..."):
+        exam_prompt = "Generate a personalized IGCSE Geography exam with MCQs, short answers, essays, and map/image questions:\n"
+        for topic,q in topic_q.items():
+            exam_prompt += f"- {topic}: {q['MCQ']} MCQs, {q['SA']} SA, {q['Essay']} essays, {q['Map']} map/image question.\n"
+        exam_prompt += "Provide model answers, rubric for essays, and image URLs."
+
+        try:
             response = openai.chat.completions.create(
-                model="gpt-4",
+                model=MODEL_TO_USE,
                 messages=[{"role": "user", "content": exam_prompt}],
                 max_tokens=3000
             )
             exam_text = response.choices[0].message.content
             st.session_state["exam_text"] = exam_text
             st.text_area("📄 Exam Paper", exam_text, height=500)
+        except openai.error.InvalidRequestError as e:
+            st.error(f"OpenAI model error: {e}")
+        except openai.error.AuthenticationError as e:
+            st.error(f"OpenAI API key error: {e}")
+        except openai.error.APIConnectionError as e:
+            st.error(f"Connection error to OpenAI API: {e}")
+        except openai.error.OpenAIError as e:
+            st.error(f"Unexpected OpenAI API error: {e}")
 
     # Parse exam
     def parse_exam(text):
@@ -270,4 +282,5 @@ if page=="📊 Dashboard":
         badges = supabase.table("badges").select("*").eq("user_id", user_id).execute()
         for b in badges.data: st.success(f"{b['badge_name']} ({b['date_awarded'][:10]})")
     else: st.write("No exams taken yet.")
+
 
