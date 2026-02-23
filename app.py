@@ -139,13 +139,15 @@ if page == "📝 Take Exam":
                 exam_prompt += f"- {topic}: {q['MCQ']} MCQs, {q['SA']} SA, {q['Essay']} essays, {q['Map']} map/image question.\n"
             exam_prompt += "Provide model answers, rubric for essays, and image URLs."
 
-            response = openai.ChatCompletion.create(
+            # ✅ Updated OpenAI API v1 call
+            response = openai.chat.completions.create(
                 model="gpt-4",
-                messages=[{"role":"user","content":exam_prompt}],
+                messages=[{"role": "user", "content": exam_prompt}],
                 max_tokens=3000
             )
-            st.session_state["exam_text"] = response['choices'][0]['message']['content']
-            st.text_area("📄 Exam Paper", st.session_state["exam_text"], height=500)
+            exam_text = response.choices[0].message.content
+            st.session_state["exam_text"] = exam_text
+            st.text_area("📄 Exam Paper", exam_text, height=500)
 
     # Parse exam
     def parse_exam(text):
@@ -183,24 +185,36 @@ if page == "📝 Take Exam":
                 sa_feedback, sa_score = [],0
                 for s,m in zip(sa_student,sa_model):
                     prompt=f"Grade out of 5:\nModel:{m}\nStudent:{s}\nProvide score and brief feedback."
-                    res=openai.ChatCompletion.create(model="gpt-4",messages=[{"role":"user","content":prompt}],max_tokens=150)
-                    text=res['choices'][0]['message']['content']
+                    res=openai.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role":"user","content":prompt}],
+                        max_tokens=150
+                    )
+                    text=res.choices[0].message.content
                     sa_feedback.append(text)
                     match=re.search(r"(\d+)",text); sa_score+=int(match.group(1)) if match else 0
                 # --- Essays ---
                 essay_feedback, essay_score=[],0
                 for s,m in zip(essay_student,essay_model):
                     prompt=f"Grade essay out of 10 using rubric: Accuracy 0-4, Examples 0-2, Structure 0-2, Terms 0-2.\nModel:{m}\nStudent:{s}\nProvide total score and feedback."
-                    res=openai.ChatCompletion.create(model="gpt-4",messages=[{"role":"user","content":prompt}],max_tokens=250)
-                    text=res['choices'][0]['message']['content']
+                    res=openai.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role":"user","content":prompt}],
+                        max_tokens=250
+                    )
+                    text=res.choices[0].message.content
                     essay_feedback.append(text)
                     match=re.search(r"Total\s*out of\s*(\d+)",text); essay_score+=int(match.group(1)) if match else 0
                 # --- Map ---
                 map_feedback,map_score=[],0
                 for s,url in zip(map_student,map_urls):
                     prompt=f"Check student's answer based on map URL {url}.\nAnswer:{s}\nScore 0-5"
-                    res=openai.ChatCompletion.create(model="gpt-4",messages=[{"role":"user","content":prompt}],max_tokens=100)
-                    text=res['choices'][0]['message']['content']
+                    res=openai.chat.completions.create(
+                        model="gpt-4",
+                        messages=[{"role":"user","content":prompt}],
+                        max_tokens=100
+                    )
+                    text=res.choices[0].message.content
                     map_feedback.append(text)
                     match=re.search(r"(\d+)",text); map_score+=int(match.group(1)) if match else 0
 
@@ -256,3 +270,4 @@ if page=="📊 Dashboard":
         badges = supabase.table("badges").select("*").eq("user_id", user_id).execute()
         for b in badges.data: st.success(f"{b['badge_name']} ({b['date_awarded'][:10]})")
     else: st.write("No exams taken yet.")
+
